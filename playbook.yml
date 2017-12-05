@@ -1,0 +1,65 @@
+---
+- hosts: all
+  sudo: true
+  tasks:
+    - name: install docker
+      command: sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+
+    - name: add deb repo
+      command: sudo touch /etc/apt/sources.list.d/docker.list
+
+    - lineinfile: dest="/etc/apt/sources.list.d/docker.list" line="{{item}}"
+      with_items:
+        - "deb https://apt.dockerproject.org/repo ubuntu-trusty main"
+
+    - name: apt update
+      apt: update_cache=yes
+
+    - apt: name=docker-engine state=present
+
+
+    - name: Create /opt/src
+      file: path=/opt/src state=directory recurse=yes
+
+    - name: Create lib dir
+      file: path=/usr/share/sbt/0.13.7 state=directory recurse=yes
+
+    - name: Download sbt v0.13.7
+      get_url: url=https://dl.bintray.com/sbt/native-packages/sbt/0.13.7/sbt-0.13.7.tgz dest=/opt/src/sbt-0.13.7.tgz
+
+    - name: Unpack sbt
+      unarchive: src=/opt/src/sbt-0.13.7.tgz dest=/usr/share/sbt/0.13.7  copy=no
+
+    - name: Link sbt
+      file: state=link src=/usr/share/sbt/0.13.7/sbt/bin/sbt dest=/usr/bin/sbt
+
+    
+    - name: install git
+      apt: package=git update_cache=yes
+
+    - name: Install add-apt-repostory
+      apt: name=software-properties-common state=latest
+
+    - name: Add Oracle Java Repository
+      apt_repository: repo='ppa:webupd8team/java'
+
+    - name: Accept Java 8 License
+      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+    - name: Install Oracle Java 8
+      apt: name={{item}} state=latest
+      with_items:
+        - oracle-java8-installer
+        - ca-certificates
+        - oracle-java8-set-default
+
+
+
+
+
+
+
+
+    
+
+
